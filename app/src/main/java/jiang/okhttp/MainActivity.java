@@ -9,6 +9,7 @@ import fz.okhttplib.callback.OkRequestCallback;
 import fz.okhttplib.file.download.DownLoadListenerAdapter;
 import fz.okhttplib.tool.DefLoad;
 import fz.okhttplib.tool.OkhttpUtil;
+import nativedownload.NativeDownload;
 
 import android.Manifest;
 import android.content.pm.PackageManager;
@@ -39,7 +40,7 @@ public class MainActivity extends AppCompatActivity {
         File video = getExternalFilesDir("video");
         OkhttpUtil.log("下载", "路径:" + video.getPath());
         String name = System.currentTimeMillis() + ".mp4";
-        HttpImpl.download("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
+        NativeDownload.download("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
                 video.getPath() + File.separator,
                 name,
                 new DownLoadListenerAdapter() {
