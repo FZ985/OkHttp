@@ -40,7 +40,9 @@ public class MainActivity extends AppCompatActivity {
         File video = getExternalFilesDir("video");
         OkhttpUtil.log("下载", "路径:" + video.getPath());
         String name = System.currentTimeMillis() + ".mp4";
-        NativeDownload.download("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
+//        NativeDownload.download("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
+//        HttpImpl.download("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
+        HttpImpl.download3("http://cdnvideo.dev.koibone.com/fd22ac03vodcq1400255844/14c9d38b5285890804190093348/DkfiREPG21YA.mp4",
                 video.getPath() + File.separator,
                 name,
                 new DownLoadListenerAdapter() {
@@ -78,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     public void get(View view) {
         HashMap<String, Object> params = new HashMap<>();
 
-        HttpImpl.get("http://www.baidu,com")
+        HttpImpl.get("http://www.baidu.com")
                 .bind(this)//绑定生命周期
                 .load(DefLoad.use(this))//使用loading
                 .request(new OkHttpBaseRequest(params))//设置请求参数
