@@ -12,4 +12,9 @@ public abstract class DownLoadListenerAdapter implements DownLoadListener {
     public void newResponse(Response response, File file) {
 
     }
+
+    @Override
+    public void cancel() {
+
+    }
 }

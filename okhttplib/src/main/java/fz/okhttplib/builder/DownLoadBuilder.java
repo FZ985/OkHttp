@@ -60,7 +60,7 @@ public class DownLoadBuilder {
             OkHttpConfig.getInstance()
                     .client()
                     .newBuilder()
-                    .addInterceptor(new Interceptor() {
+                    .addNetworkInterceptor(new Interceptor() {
                         @Override
                         public Response intercept(Chain chain) throws IOException {
                             Response originalResponse = chain.proceed(chain.request());

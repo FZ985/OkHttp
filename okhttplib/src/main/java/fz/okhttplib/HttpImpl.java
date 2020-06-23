@@ -8,9 +8,12 @@ import java.util.concurrent.Executors;
 
 import fz.okhttplib.base.OkHttpConfig;
 import fz.okhttplib.builder.DownLoadBuilder;
+import fz.okhttplib.builder.DownLoadBuilder2;
+import fz.okhttplib.builder.DownLoadBuilder3;
 import fz.okhttplib.builder.MethodBuilder;
 import fz.okhttplib.callback.Http;
 import fz.okhttplib.file.download.DownLoadInfo;
+import fz.okhttplib.file.download.DownLoadInfo2;
 import fz.okhttplib.file.download.DownLoadListenerAdapter;
 import fz.okhttplib.tool.OkhttpUtil;
 import okhttp3.CookieJar;
@@ -89,6 +92,17 @@ public class HttpImpl {
 
     public static void download(String url, String path, String fileName, DownLoadListenerAdapter call) {
         DownLoadBuilder.getInstance().download(new DownLoadInfo(url, path, fileName), call);
+    }
+
+    //单文件下载，支持断点下载
+    @Deprecated
+    public static void download2(String url, String path, String fileName, DownLoadListenerAdapter call) {
+        DownLoadBuilder2.getInstance().download(new DownLoadInfo2(url, path, fileName), call);
+    }
+
+    //多文件文件下载，支持断点下载 DownLoadBuilder2的优化
+    public static void download3(String url, String path, String fileName, DownLoadListenerAdapter call) {
+        DownLoadBuilder3.getInstance().download(new DownLoadInfo2(url, path, fileName), call);
     }
 
     public static void enable(boolean logDebug, boolean isProxy) {

@@ -1,9 +1,6 @@
 package fz.okhttplib.file.download;
 
-import android.annotation.SuppressLint;
-
 import java.io.IOException;
-import java.text.DecimalFormat;
 
 import okhttp3.MediaType;
 import okhttp3.Response;
@@ -14,14 +11,16 @@ import okio.ForwardingSource;
 import okio.Okio;
 import okio.Source;
 
-public class DownloadResponseBody extends ResponseBody {
+public class DownloadResponseBody2 extends ResponseBody {
     private Response originalResponse;
     private DownLoadListenerAdapter downloadListener;
     private BufferedSource bufferedSource;
+    private DownLoadInfo2 info;
 
-    public DownloadResponseBody(Response originalResponse, DownLoadListenerAdapter downloadListener) {
+    public DownloadResponseBody2(Response originalResponse, DownLoadInfo2 info, DownLoadListenerAdapter downloadListener) {
         this.originalResponse = originalResponse;
         this.downloadListener = downloadListener;
+        this.info = info;
     }
 
     @Override
@@ -31,7 +30,7 @@ public class DownloadResponseBody extends ResponseBody {
 
     @Override
     public long contentLength() {
-        return originalResponse.body().contentLength();
+        return info.totalLength;
     }
 
     @Override
@@ -44,22 +43,17 @@ public class DownloadResponseBody extends ResponseBody {
 
     private Source source(Source source) {
         return new ForwardingSource(source) {
-            long totalBytesRead = 0L;
+            long totalBytesRead = info.currentLength;
 
             @Override
             public long read(Buffer sink, long byteCount) throws IOException {
                 long bytesRead = super.read(sink, byteCount);
                 totalBytesRead += bytesRead != -1 ? bytesRead : 0;//不断统计当前下载好的数据
                 //接口回调
-                float percent = (totalBytesRead * 1.0f / contentLength() * 100);
-                downloadListener.update(totalBytesRead, number2(percent), contentLength(), bytesRead == -1);
+                int percent = (int) (totalBytesRead * 1.0f / contentLength() * 100);
+                downloadListener.update(totalBytesRead, percent, contentLength(), bytesRead == -1);
                 return bytesRead;
             }
         };
-    }
-
-    @SuppressLint("DefaultLocale")
-    private float number2(float f) {
-        return Float.parseFloat(String.format("%.2f", f));
     }
 }

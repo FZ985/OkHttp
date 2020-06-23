@@ -10,6 +10,13 @@
     <Button
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:onClick="download"
+        android:text="download"
+        android:textAllCaps="false" />
+
+ <Button
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         android:onClick="get"
         android:text="get"
         android:textAllCaps="false" />
