@@ -1,5 +1,7 @@
 package fz.okhttplib.file.download;
 
+import android.annotation.SuppressLint;
+
 import java.io.IOException;
 
 import okhttp3.MediaType;
@@ -50,10 +52,15 @@ public class DownloadResponseBody2 extends ResponseBody {
                 long bytesRead = super.read(sink, byteCount);
                 totalBytesRead += bytesRead != -1 ? bytesRead : 0;//不断统计当前下载好的数据
                 //接口回调
-                int percent = (int) (totalBytesRead * 1.0f / contentLength() * 100);
-                downloadListener.update(totalBytesRead, percent, contentLength(), bytesRead == -1);
+                float percent = (totalBytesRead * 1.0f / contentLength() * 100);
+                downloadListener.update(totalBytesRead, number2(percent), contentLength(), bytesRead == -1);
                 return bytesRead;
             }
         };
+    }
+
+    @SuppressLint("DefaultLocale")
+    private float number2(float f) {
+        return Float.parseFloat(String.format("%.2f", f));
     }
 }
