@@ -38,7 +38,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 public class OkHttpConfig implements Http {
     private boolean isProxy = true;
     private boolean logInterceptor = false;
-    private static Http INSTANCE;
+    private static OkHttpConfig INSTANCE;
     private OkHttpClient mOkHttpClient;
     private OkHttpClient.Builder mBuilder;
     private Handler mDelivery;
@@ -93,7 +93,7 @@ public class OkHttpConfig implements Http {
         }
     }
 
-    public static Http getInstance() {
+    public static OkHttpConfig getInstance() {
         if (INSTANCE == null) {
             synchronized (OkHttpConfig.class) {
                 if (INSTANCE == null) {
