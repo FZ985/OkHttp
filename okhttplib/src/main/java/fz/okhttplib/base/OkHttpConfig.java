@@ -6,11 +6,13 @@ import android.os.Looper;
 import android.text.TextUtils;
 import android.util.Log;
 
+
 import java.io.File;
 import java.net.Proxy;
 import java.security.SecureRandom;
 import java.security.cert.CertificateException;
 import java.security.cert.X509Certificate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -34,17 +36,18 @@ import okhttp3.RequestBody;
 import okhttp3.logging.HttpLoggingInterceptor;
 
 public class OkHttpConfig implements Http {
-    public static boolean isProxy = true;
-    public static boolean logInterceptor = false;
+    private boolean isProxy = true;
+    private boolean logInterceptor = false;
     private static Http INSTANCE;
     private OkHttpClient mOkHttpClient;
     private OkHttpClient.Builder mBuilder;
     private Handler mDelivery;
-    public static CookieJar cookieJar;
-    public static OkHttpClient.Builder OKHTTPCLIENT_BUILDER;
-    public static List<Interceptor> interceptors;
+    private CookieJar cookieJar;
+    private OkHttpClient.Builder OKHTTPCLIENT_BUILDER;
+    private List<Interceptor> interceptors;
+    private List<Interceptor> netInterceptors;
     private static final long cacheSize = 50 * 1024 * 1024;//缓存大小为50M
-    public static String cachePath;
+    private String cachePath;
     private CacheControl cacheControl;
 
     @Override
@@ -103,37 +106,7 @@ public class OkHttpConfig implements Http {
 
     private OkHttpConfig() {
         Log.e("OkHttpConf", " OkHttpConf init..");
-        if (OKHTTPCLIENT_BUILDER == null) {
-            mBuilder = new OkHttpClient.Builder()
-                    .connectTimeout(15, TimeUnit.SECONDS)
-                    .writeTimeout(15, TimeUnit.SECONDS)
-                    .readTimeout(15, TimeUnit.SECONDS)
-                    .sslSocketFactory(createSSLSocketFactory())// 信任所有证书~
-//                .sslSocketFactory(createSSLSocketFactory(), new OkTrustAllCerts()) // 信任所有证书~
-                    .hostnameVerifier(new OkTrustAllHostnameVerifier());
-            if (!TextUtils.isEmpty(cachePath)) {
-                mBuilder.cache(new Cache(new File(cachePath), cacheSize));
-            }
-            if (isProxy) {
-                mBuilder.proxy(Proxy.NO_PROXY);
-            }
-            if (cookieJar != null) {
-                mBuilder.cookieJar(cookieJar);
-            }
-            if (logInterceptor) {
-                HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(new OkHttpLoggerInterceptor());
-                interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
-                mBuilder.addInterceptor(interceptor);
-            }
-            if (interceptors != null && interceptors.size() > 0) {
-                for (Interceptor interceptor : interceptors) {
-                    mBuilder.addInterceptor(interceptor);
-                }
-            }
-        } else {
-            mBuilder = OKHTTPCLIENT_BUILDER;
-        }
-        mOkHttpClient = mBuilder.build();
+        newBuild();
         mDelivery = new Handler(Looper.getMainLooper());
         //设置缓存时间为10小时
         cacheControl = new CacheControl.Builder()
@@ -155,12 +128,95 @@ public class OkHttpConfig implements Http {
         return ssfFactory;
     }
 
+    public void newBuild() {
+        if (mOkHttpClient != null) {
+            mBuilder = (OKHTTPCLIENT_BUILDER != null) ? OKHTTPCLIENT_BUILDER : mOkHttpClient.newBuilder();
+            init();
+        } else {
+            if (OKHTTPCLIENT_BUILDER == null) {
+                mBuilder = new OkHttpClient.Builder()
+                        .connectTimeout(15, TimeUnit.SECONDS)
+                        .writeTimeout(15, TimeUnit.SECONDS)
+                        .readTimeout(15, TimeUnit.SECONDS)
+                        .sslSocketFactory(createSSLSocketFactory())// 信任所有证书~
+//                .sslSocketFactory(createSSLSocketFactory(), new OkTrustAllCerts()) // 信任所有证书~
+                        .hostnameVerifier(new OkTrustAllHostnameVerifier());
+                init();
+            } else {
+                mBuilder = OKHTTPCLIENT_BUILDER;
+            }
+        }
+        mOkHttpClient = mBuilder.build();
+    }
+
+    public OkHttpConfig isProxy(boolean isProxy) {
+        this.isProxy = isProxy;
+        return this;
+    }
+
+    public OkHttpConfig cachePath(String cachePath) {
+        this.cachePath = cachePath;
+        return this;
+    }
+
+    public OkHttpConfig cookie(CookieJar cookieJar) {
+        this.cookieJar = cookieJar;
+        return this;
+    }
+
+    public OkHttpConfig logInterceptor(boolean logInterceptor) {
+        this.logInterceptor = logInterceptor;
+        return this;
+    }
+
+    public OkHttpConfig addInterceptor(Interceptor interceptor) {
+        if (this.interceptors == null) this.interceptors = new ArrayList<>();
+        if (interceptor != null) this.interceptors.add(interceptor);
+        return this;
+    }
+
+    public OkHttpConfig addNetInterceptor(Interceptor interceptor) {
+        if (this.netInterceptors == null) this.netInterceptors = new ArrayList<>();
+        if (interceptor != null) this.netInterceptors.add(interceptor);
+        return this;
+    }
+
+    public OkHttpConfig clientBuilder(OkHttpClient.Builder OKHTTPCLIENT_BUILDER) {
+        this.OKHTTPCLIENT_BUILDER = OKHTTPCLIENT_BUILDER;
+        return this;
+    }
+
+    private void init() {
+        if (!TextUtils.isEmpty(cachePath)) {
+            mBuilder.cache(new Cache(new File(cachePath), cacheSize));
+        }
+        if (isProxy) {
+            mBuilder.proxy(Proxy.NO_PROXY);
+        }
+        if (cookieJar != null) {
+            mBuilder.cookieJar(cookieJar);
+        }
+        if (logInterceptor) {
+            HttpLoggingInterceptor interceptor = new HttpLoggingInterceptor(new OkHttpLoggerInterceptor());
+            interceptor.setLevel(HttpLoggingInterceptor.Level.BODY);
+            mBuilder.addInterceptor(interceptor);
+        }
+        if (interceptors != null && interceptors.size() > 0) {
+            for (Interceptor interceptor : interceptors) {
+                mBuilder.addInterceptor(interceptor);
+            }
+        }
+        if (netInterceptors != null && netInterceptors.size() > 0) {
+            for (Interceptor interceptor : netInterceptors) {
+                mBuilder.addNetworkInterceptor(interceptor);
+            }
+        }
+    }
+
     @Override
     public CacheControl cacheControl() {
         return cacheControl;
     }
-
-
 
     public class OkTrustAllCerts implements X509TrustManager {
         @Override
@@ -192,13 +248,14 @@ public class OkHttpConfig implements Http {
 
         /**
          * 包装请求体用于上传文件的回调
-         * @param requestBody 请求体RequestBody
+         *
+         * @param requestBody             请求体RequestBody
          * @param progressRequestListener 进度回调接口
          * @return 包装后的进度回调请求体
          */
-        public static ProgressRequestBody addProgressRequestListener(RequestBody requestBody, ProgressRequestListener progressRequestListener){
+        public static ProgressRequestBody addProgressRequestListener(RequestBody requestBody, ProgressRequestListener progressRequestListener) {
             //包装请求体
-            return new ProgressRequestBody(requestBody,progressRequestListener);
+            return new ProgressRequestBody(requestBody, progressRequestListener);
         }
     }
 }

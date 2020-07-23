@@ -1,12 +1,12 @@
 package fz.okhttplib;
 
 
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import fz.okhttplib.base.OkHttpConfig;
 import fz.okhttplib.builder.DownLoadBuilder;
 import fz.okhttplib.builder.DownLoadBuilder2;
 import fz.okhttplib.builder.DownLoadBuilder3;
@@ -16,9 +16,7 @@ import fz.okhttplib.file.download.DownLoadInfo;
 import fz.okhttplib.file.download.DownLoadInfo2;
 import fz.okhttplib.file.download.DownLoadListenerAdapter;
 import fz.okhttplib.tool.OkhttpUtil;
-import okhttp3.CookieJar;
 import okhttp3.Interceptor;
-import okhttp3.OkHttpClient;
 
 public class HttpImpl {
 
@@ -105,35 +103,8 @@ public class HttpImpl {
         DownLoadBuilder3.getInstance().download(new DownLoadInfo2(url, path, fileName), call);
     }
 
-    public static void enable(boolean logDebug, boolean isProxy) {
-        OkHttpConfig.isProxy = isProxy;
+    public static void enable(boolean logDebug) {
         OkhttpUtil.LogDebug(logDebug);
-    }
-
-    public static void cookie(CookieJar cookieJar) {
-        OkHttpConfig.cookieJar = cookieJar;
-    }
-
-    public static void clientBuilder(OkHttpClient.Builder OKHTTPCLIENT_BUILDER) {
-        OkHttpConfig.OKHTTPCLIENT_BUILDER = OKHTTPCLIENT_BUILDER;
-    }
-
-    public static void logInterceptor(boolean logInterceptor) {
-        OkHttpConfig.logInterceptor = logInterceptor;
-    }
-
-    public static void addInterceptors(List<Interceptor> interceptors) {
-        if (interceptorss == null) interceptorss = new ArrayList<>();
-        if (interceptors != null) {
-            interceptorss.addAll(interceptors);
-        }
-        OkHttpConfig.interceptors = interceptorss;
-    }
-
-    public static void addInterceptor(Interceptor interceptor) {
-        if (interceptorss == null) interceptorss = new ArrayList<>();
-        if (interceptor != null) interceptorss.add(interceptor);
-        OkHttpConfig.interceptors = interceptorss;
     }
 
     /***==过时函数，但仍可以使用=====================================================***/
