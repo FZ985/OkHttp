@@ -130,6 +130,10 @@ public class RequestCall implements Http.Call {
                         if (call.isCanceled()) return;
                     }
                 });
+                if (response == null){
+                    log("响应对象response 为空");
+                    return;
+                }
                 if (methodBuilder.getLifecycle() != null && methodBuilder.getLifecycle().getCurrentState() == Lifecycle.State.DESTROYED) {
                     return;
                 }
