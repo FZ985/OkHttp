@@ -33,7 +33,7 @@ public class DefLoad extends Loadding {
             Activity activity = scanForActivity(progressDialog.getContext());
             if (activity != null && !activity.isFinishing()) {
                 progressDialog.show();
-                OkhttpUtil.log("load","show");
+//                OkhttpUtil.log("load","show");
             }
         }
     }
@@ -45,7 +45,7 @@ public class DefLoad extends Loadding {
             if (activity != null && !activity.isFinishing()) {
                 progressDialog.dismiss();
                 progressDialog = null;
-                OkhttpUtil.log("load","dismiss");
+//                OkhttpUtil.log("load","dismiss");
             }
         }
         progressDialog = null;

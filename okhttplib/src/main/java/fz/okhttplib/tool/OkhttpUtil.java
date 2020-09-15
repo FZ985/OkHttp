@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.google.gson.Gson;
 
+import java.io.File;
 import java.net.FileNameMap;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -13,7 +14,19 @@ import java.util.List;
 import java.util.Map;
 
 import fz.okhttplib.BuildConfig;
+import fz.okhttplib.base.OkHttpBaseRequest;
+import fz.okhttplib.base.OkHttpConfig;
+import fz.okhttplib.base.OkHttpRequestHeaders;
 import fz.okhttplib.base.Params;
+import fz.okhttplib.builder.MethodBuilder;
+import fz.okhttplib.callback.Http;
+import fz.okhttplib.file.upload.UIProgressRequestListener;
+import okhttp3.FormBody;
+import okhttp3.Headers;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.Request;
+import okhttp3.RequestBody;
 
 
 /**
@@ -21,6 +34,8 @@ import fz.okhttplib.base.Params;
  * date: 2019-04-22 14:24
  **/
 public class OkhttpUtil {
+
+    private static final MediaType JSON = MediaType.parse("application/json; charset=utf-8");
     private static boolean DEBUG = BuildConfig.DEBUG;
     public static final Gson GSON = new Gson();
 
@@ -129,4 +144,114 @@ public class OkhttpUtil {
         return json;
     }
 
+    public static Request.Builder getBuilder(MethodBuilder methodBuilder, OkHttpBaseRequest request, RequestBody body) {
+        Request.Builder builder = new Request.Builder();
+        if (request != null && request.getHeaders().size() > 0) {
+            for (OkHttpRequestHeaders header : request.getHeaders()) {
+                log("HttpApi", "添加请求头key:" + header.key + ",value:" + header.value);
+                builder.addHeader(header.key, header.value);
+            }
+        }
+        switch (methodBuilder.type()) {
+            default:
+            case Http.GET:
+                builder.get();
+                break;
+            case Http.POST:
+                builder.post(body);
+                break;
+            case Http.PUT:
+                builder.put(body);
+                break;
+            case Http.DELETE:
+                if (body == null) builder.delete();
+                else builder.delete(body);
+                break;
+            case Http.HEAD:
+                builder.head();
+                break;
+            case Http.PATCH:
+                builder.patch(body);
+                break;
+        }
+        return builder;
+    }
+
+    public static Request getRequest(MethodBuilder methodBuilder, File[] fils, String[] fileKeys, UIProgressRequestListener uiProgressRequestListener) {
+        switch (methodBuilder.type()) {
+            default:
+            case Http.GET:
+                String finalUrl = methodBuilder.url();
+                if (methodBuilder.request() != null) {
+                    finalUrl = methodBuilder.url() + OkhttpUtil.appendParams(OkhttpUtil.validateParam(OkhttpUtil.map2Params(methodBuilder.request().requestParams)));
+                }
+                log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + finalUrl);
+                return OkhttpUtil.getBuilder(methodBuilder, methodBuilder.request(), null).url(finalUrl).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).cacheControl(OkHttpConfig.getInstance().cacheControl()).build();
+            case Http.POST:
+            case Http.PUT:
+            case Http.DELETE:
+            case Http.HEAD:
+            case Http.PATCH:
+                if (methodBuilder.rType() == Http.NO) {
+                    return getBuilder(methodBuilder, methodBuilder.request(), null).url(methodBuilder.url()).tag(methodBuilder.url()).build();
+                } else if (methodBuilder.rType() == Http.JSON) {
+                    String json = (methodBuilder.request() != null && methodBuilder.request().requestBean != null) ? OkhttpUtil.reqParams(methodBuilder.request().requestBean) : "";
+                    log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + methodBuilder.url() + "<<请求json:" + json);
+                    return getBuilder(methodBuilder, methodBuilder.request(), RequestBody.create(JSON, json)).url(methodBuilder.url()).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).build();
+                } else if (methodBuilder.rType() == Http.PARAMS) {
+                    FormBody.Builder builder = new FormBody.Builder();
+                    StringBuilder str = new StringBuilder();
+                    if (methodBuilder.request() != null) {//key value传值请求
+                        for (Params param : OkhttpUtil.validateParam(OkhttpUtil.map2Params(methodBuilder.request().requestParams))) {
+                            builder.add(param.key, param.value);
+                            str.append(param.key + ":" + param.value + ";");
+                        }
+                    }
+                    log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + methodBuilder.url() + "<<请求参数>>:" + str.toString());
+                    return getBuilder(methodBuilder, methodBuilder.request(), builder.build()).url(methodBuilder.url()).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).build();
+                } else if (methodBuilder.rType() == Http.FORM) {
+                    return buildMultipartFormRequest(methodBuilder, fils, fileKeys, uiProgressRequestListener);
+                }
+        }
+        return null;
+    }
+
+    public static Request buildMultipartFormRequest(MethodBuilder methodBuilder, File[] files, String[] fileKeys, UIProgressRequestListener uiProgressRequestListener) {
+        Params[] params = (methodBuilder.request() != null ? OkhttpUtil.validateParam(OkhttpUtil.map2Params(methodBuilder.request().requestParams)) : OkhttpUtil.validateParam(null));
+        MultipartBody.Builder builder = new MultipartBody.Builder("AaB03x");
+        builder.setType(MultipartBody.FORM);
+        for (Params param : params) {
+            log("HttpApi", "##请求数据##key:" + param.key + ",value:" + param.value);
+            builder.addPart(
+                    Headers.of("Content-Disposition", "form-data; name=\""
+                            + param.key + "\""),
+                    RequestBody.create(null, param.value));
+        }
+        if (files != null && fileKeys != null && files.length == fileKeys.length) {
+            RequestBody fileBody = null;
+            for (int i = 0; i < files.length; i++) {
+                File file = files[i];
+                String fileName = file.getName();
+                fileBody = RequestBody.create(
+                        MediaType.parse(OkhttpUtil.guessMimeType(fileName)), file);
+                // TODO 根据文件名设置contentType
+                builder.addPart(
+                        Headers.of("Content-Disposition", "form-data; name=\""
+                                + fileKeys[i] + "\"; filename=\"" + fileName
+                                + "\""), fileBody);
+            }
+        }
+        RequestBody requestBody = builder.build();
+        return getBuilder(methodBuilder, methodBuilder.request(), uiProgressRequestListener == null ? requestBody : OkHttpConfig.ProgressHelper.addProgressRequestListener(requestBody, uiProgressRequestListener)).url(methodBuilder.url()).tag(methodBuilder.url()).build();
+    }
+
+    public static String typeTag(MethodBuilder methodBuilder) {
+        if (methodBuilder.type() == Http.GET) return "get";
+        else if (methodBuilder.type() == Http.POST) return "post";
+        else if (methodBuilder.type() == Http.PUT) return "put";
+        else if (methodBuilder.type() == Http.DELETE) return "delete";
+        else if (methodBuilder.type() == Http.HEAD) return "head";
+        else if (methodBuilder.type() == Http.PATCH) return "patch";
+        else return "";
+    }
 }
