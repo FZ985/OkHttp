@@ -45,7 +45,7 @@ public class HttpImpl {
     }
 
     public static MethodBuilder putParams(String url) {
-        return new MethodBuilder(Http.PUT, Http.PARAMS);
+        return new MethodBuilder(url,Http.PUT, Http.PARAMS);
     }
 
     public static MethodBuilder putForm(String url) {

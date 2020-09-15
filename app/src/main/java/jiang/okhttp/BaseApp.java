@@ -7,13 +7,9 @@ import android.net.NetworkInfo;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.io.IOException;
-
 import fz.okhttplib.base.OkHttpConfig;
 import fz.okhttplib.tool.ResponeInterceptor;
-import okhttp3.Interceptor;
 import okhttp3.Request;
-import okhttp3.Response;
 
 /**
  * Create by JFZ
@@ -35,18 +31,19 @@ public class BaseApp extends Application {
                         Log.e("拦截响应", "result:" + result);
                     }
                 })
-                .addInterceptor(new Interceptor() {
-                    @Override
-                    public Response intercept(Chain chain) throws IOException {
-                        Request.Builder build = chain.request().newBuilder();
-                        Request request = build.build();
-                        if (!isConnection(BaseApp.getInstance())) {
-                            OkHttpConfig.getInstance().obtainHandler().post(() -> {
-                                Toast.makeText(BaseApp.this, "没网", Toast.LENGTH_SHORT).show();
-                            });
-                        }
-                        return chain.proceed(request);
+                .addInterceptor(chain -> {
+                    Request.Builder build = chain.request().newBuilder();
+                    Request request = build.build();
+                    if (!isConnection(BaseApp.getInstance())) {
+                        OkHttpConfig.getInstance().obtainHandler().post(() -> {
+                            Toast.makeText(BaseApp.this, "没网", Toast.LENGTH_SHORT).show();
+                        });
+                    } else {
+                        OkHttpConfig.getInstance().obtainHandler().post(() -> {
+                            Toast.makeText(BaseApp.this, "有网", Toast.LENGTH_SHORT).show();
+                        });
                     }
+                    return chain.proceed(request);
                 }).newBuild();
     }
 
