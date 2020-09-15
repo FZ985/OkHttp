@@ -186,7 +186,7 @@ public class OkhttpUtil {
                     finalUrl = methodBuilder.url() + OkhttpUtil.appendParams(OkhttpUtil.validateParam(OkhttpUtil.map2Params(methodBuilder.request().requestParams)));
                 }
                 log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + finalUrl);
-                return OkhttpUtil.getBuilder(methodBuilder, methodBuilder.request(), null).url(finalUrl).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).cacheControl(OkHttpConfig.getInstance().cacheControl()).build();
+                return OkhttpUtil.getBuilder(methodBuilder, methodBuilder.request(), null).url(finalUrl).tag(methodBuilder.request().tag == null ? methodBuilder.url() : methodBuilder.request().tag).cacheControl(OkHttpConfig.getInstance().cacheControl()).build();
             case Http.POST:
             case Http.PUT:
             case Http.DELETE:
@@ -197,7 +197,7 @@ public class OkhttpUtil {
                 } else if (methodBuilder.rType() == Http.JSON) {
                     String json = (methodBuilder.request() != null && methodBuilder.request().requestBean != null) ? OkhttpUtil.reqParams(methodBuilder.request().requestBean) : "";
                     log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + methodBuilder.url() + "<<请求json:" + json);
-                    return getBuilder(methodBuilder, methodBuilder.request(), RequestBody.create(JSON, json)).url(methodBuilder.url()).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).build();
+                    return getBuilder(methodBuilder, methodBuilder.request(), RequestBody.create(JSON, json)).url(methodBuilder.url()).tag(methodBuilder.request().tag == null ? methodBuilder.url() : methodBuilder.request().tag).build();
                 } else if (methodBuilder.rType() == Http.PARAMS) {
                     FormBody.Builder builder = new FormBody.Builder();
                     StringBuilder str = new StringBuilder();
@@ -208,7 +208,7 @@ public class OkhttpUtil {
                         }
                     }
                     log("HttpApi", "#####" + typeTag(methodBuilder) + "请求:" + methodBuilder.url() + "<<请求参数>>:" + str.toString());
-                    return getBuilder(methodBuilder, methodBuilder.request(), builder.build()).url(methodBuilder.url()).tag(methodBuilder.request() == null ? methodBuilder.url() : methodBuilder.request().tag).build();
+                    return getBuilder(methodBuilder, methodBuilder.request(), builder.build()).url(methodBuilder.url()).tag(methodBuilder.request().tag == null ? methodBuilder.url() : methodBuilder.request().tag).build();
                 } else if (methodBuilder.rType() == Http.FORM) {
                     return buildMultipartFormRequest(methodBuilder, fils, fileKeys, uiProgressRequestListener);
                 }
